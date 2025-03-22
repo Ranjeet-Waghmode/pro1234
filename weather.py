@@ -1,6 +1,7 @@
 import requests
 
 def get_weather_forecast(city_id): 
+    complete_url ="https://api.openweathermap.org/data/2.5/weather?lat=18.49839&lon=73.77439&appid=ad6a5cbcd5ad94dd42336fa94fec818e"
 
     # Construct the complete URL
 # \    print(complete_url)
@@ -36,4 +37,4 @@ weather_condition = weather_data["weather"][0]["description"]
 # Print out the extracted data
 print(f"City: {city}, {country}")
 print(f"Weather Condition: {weather_condition}")
-print(f"Temperature: {temp_celsius:.2f} °C (Feels Like: {temp_feels_like_celsius:.2f} °C)")
+print(f"Temperature: {temp_celsius:.2f} °C (Feels Like: {temp_feels_like_celsius:.2f} K)")
