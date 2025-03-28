@@ -1,2 +1,2 @@
-frontLeftDoor,frontRightDoor,backLeftDoor,backRightDoor,frontBonnet,backBonnet,temperature,gasDetected,motionDetected
-locked,locked,locked,locked,locked,locked,20,0,0
+frontLeftDoor,frontRightDoor,backLeftDoor,backRightDoor,frontBonnet,backBonnet,temperature,gasDetected,motionDetected,lat,lon,speed,rpm,fuel
+locked,unlocked,locked,locked,locked,locked,20,0,0,18.49839,73.77439,60,5,80

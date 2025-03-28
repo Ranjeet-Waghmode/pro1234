@@ -22,45 +22,13 @@ import requests
 # from ArduinoSensor_data import get_live_data, save_data_to_file, print_data
 from read_data_from_file import read_data_from_file, print_file_data
 
-def arduino_update():
-    # Get live data from Arduino
-#     car_status = get_live_data()
-
-    # Print the live data
-#     print_data(car_status)
-
-#     # Save the data to a file
-#     save_data_to_file(car_status)
-
-    # Optionally, read data from file (if needed)
-    data_from_file = read_data_from_file()
-        
-    global  frontLeftDoor
-    frontLeftDoor = data_from_file[1][0]
-    global  frontRightDoor
-    frontRightDoor = data_from_file[1][1]
-    global  backLeftDoor
-    backLeftDoor =   data_from_file[1][2]
-    global  backRightDoor
-    backRightDoor =   data_from_file[1][3]
-    global  frontBonnet
-    frontBonnet =   data_from_file[1][4]
-    global  backBonnet
-    backBonnet =   data_from_file[1][5]
-    global  temperature
-    temperature =   data_from_file[1][6]
-    global  gasDetected
-    gasDetected =   data_from_file[1][7]
-    global  motionDetected
-    motionDetected=     data_from_file[1][8]
-#     print_file_data(data_from_file)
-
-
 # import ArduinoSensor_data
                 # ArduinoSensor_data.main()     # This will run the main function in ArduinoSensor_data.py
                 # ArduinoSensor_data.request_data() # This will run the request_data function in ArduinoSensor_data.py
 # custom 
-import weather  
+import weather
+import getlocation
+  
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -287,15 +255,15 @@ class Ui_MainWindow(object):
         self.label_Fuel.setAlignment(QtCore.Qt.AlignCenter)
         self.label_Fuel.setObjectName("label_Fuel")
         self.horizontalLayout_3.addWidget(self.label_Fuel)
-        self.progressBar_2 = QtWidgets.QProgressBar(self.frame_4)
+        self.Fuel_Progress_bar = QtWidgets.QProgressBar(self.frame_4) # Fuel Progress bar
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.progressBar_2.sizePolicy().hasHeightForWidth())
-        self.progressBar_2.setSizePolicy(sizePolicy)
-        self.progressBar_2.setMinimumSize(QtCore.QSize(75, 0))
-        self.progressBar_2.setStyleSheet("QProgressBar{\n"
-                "    background-color : rgb(141, 144, 147);\n"
+        sizePolicy.setHeightForWidth(self.Fuel_Progress_bar.sizePolicy().hasHeightForWidth())
+        self.Fuel_Progress_bar.setSizePolicy(sizePolicy)
+        self.Fuel_Progress_bar.setMinimumSize(QtCore.QSize(75, 0))
+        self.Fuel_Progress_bar.setStyleSheet("QProgressBar{\n"
+                "    background-color : rgb(0, 0, 0);\n"
                 "    \n"
                 "    color: rgb(0, 0, 0);\n"
                 "    border-style: none;\n"
@@ -306,16 +274,16 @@ class Ui_MainWindow(object):
                 "QProgressBar::chunk{\n"
                 "    border-radius: 5px;\n"
                 "    \n"
-                "    background-color: rgb(227,162,26,150);\n"
+                "    background-color: rgb(0, 255, 127,200);\n"
                 "}")
-        self.progressBar_2.setProperty("value", 67)
-        self.progressBar_2.setTextVisible(False)
-        self.progressBar_2.setOrientation(QtCore.Qt.Horizontal)
-        self.progressBar_2.setInvertedAppearance(False)
-        self.progressBar_2.setTextDirection(QtWidgets.QProgressBar.TopToBottom)
-        self.progressBar_2.setFormat("")
-        self.progressBar_2.setObjectName("progressBar_2")
-        self.horizontalLayout_3.addWidget(self.progressBar_2)
+        self.Fuel_Progress_bar.setProperty("value",0)
+        self.Fuel_Progress_bar.setTextVisible(False)
+        self.Fuel_Progress_bar.setOrientation(QtCore.Qt.Horizontal)
+        self.Fuel_Progress_bar.setInvertedAppearance(False)
+        self.Fuel_Progress_bar.setTextDirection(QtWidgets.QProgressBar.TopToBottom)
+        self.Fuel_Progress_bar.setFormat("")
+        self.Fuel_Progress_bar.setObjectName("Fuel_Progress_bar")
+        self.horizontalLayout_3.addWidget(self.Fuel_Progress_bar)
         self.frame_5 = QtWidgets.QFrame(self.frame_dashboard)
         self.frame_5.setGeometry(QtCore.QRect(100, 340, 141, 42))
         self.frame_5.setStyleSheet("background-color: rgb(152, 57, 38,100);\n"
@@ -589,8 +557,7 @@ class Ui_MainWindow(object):
         self.frame_map.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_map.setObjectName("frame_map")
         
-        
-        self.loc_curr = [18.49839 , 73.77439]
+        self.arduino_update()
         map_ = folium.Map(location=self.loc_curr, zoom_start=13)
         folium.Marker(self.loc_curr, popup="Car Location").add_to(map_)
         # m = folium.Map(
@@ -680,13 +647,14 @@ class Ui_MainWindow(object):
         self.btn_music.setText(_translate("MainWindow", "MUSIC"))
         self.btn_map.setText(_translate("MainWindow", "MAP"))
         self.date.setText(datetime.now().strftime("%I: %M: %S  %p"))
-        arduino_update()
-        self.label_backLeftDoor.setText(_translate("MainWindow", f"{backLeftDoor}"))
-        self.label_frontRightDoor.setText(_translate("MainWindow", f"{frontRightDoor}"))
-        self.label_frontLeftDoor.setText(_translate("MainWindow", f"{frontLeftDoor}"))
-        self.label_frontBonnet.setText(_translate("MainWindow", f"{frontBonnet}"))
-        self.label_backBonnet.setText(_translate("MainWindow", f"{backBonnet}"))
-        self.label_backRightDoor.setText(_translate("MainWindow", f"{backRightDoor}"))
+        self.arduino_update()
+
+        self.label_backLeftDoor.setText(_translate("MainWindow", f"{self.backLeftDoor}"))
+        self.label_frontRightDoor.setText(_translate("MainWindow", f"{self.frontRightDoor}"))
+        self.label_frontLeftDoor.setText(_translate("MainWindow", f"{self.frontLeftDoor}"))
+        self.label_frontBonnet.setText(_translate("MainWindow", f"{self.frontBonnet}"))
+        self.label_backBonnet.setText(_translate("MainWindow", f"{self.backBonnet}"))
+        self.label_backRightDoor.setText(_translate("MainWindow", f"{self.backRightDoor}"))
         self.label_Fuel.setText(_translate("MainWindow",f"Fuel:"))
         self.label_Doorlocked.setText(_translate("MainWindow",f"All Door locked"))
         self.label_Bottom_title.setText(_translate("MainWindow",f"Rolls Royce Phantom"))
@@ -700,7 +668,7 @@ class Ui_MainWindow(object):
         self.label_Ac_Mode2.setText(_translate("MainWindow", "Mode2"))
         self.label_Ac_Mode3.setText(_translate("MainWindow", "Mode3"))
         self.label_weather_percentage_4.setText(_translate("MainWindow", f"<html><head/><body><p>{weather.weather_condition}</p></body></html>"))
-        self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{temperature}°C</p></body></html>"))
+        self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{self.temperature}°C</p></body></html>"))
         self.label_Indoor_temp.setText(_translate("MainWindow", "Indoor\n"
                 "Temperature"))
         self.checked.setText(_translate("MainWindow", "PushButton"))
@@ -746,7 +714,7 @@ class Ui_MainWindow(object):
         self.frame_map.setVisible(False)
         self.frame_music.setVisible(True)
         self.browser = QWebEngineView(self.frame_music)
-        self.browser.setUrl(QUrl("https://music.youtube.com/watch?v=w_VQJBWvJcI&list=OLAK5uy_nzzlEcO_t5ZFyS-sjbLO6Q1W0X9FEa0gs"))  # Spotify Web Player URL
+        self.browser.setUrl(QUrl("https://music.youtube.com/"))  # Spotify Web Player URL
         
         # Add the browser to the layout (inside the frame) # Dont know what happened here but working fine.
         self.music_layout = QVBoxLayout()
@@ -817,25 +785,26 @@ class Ui_MainWindow(object):
 
     def update_gauges(self):
         _translate = QtCore.QCoreApplication.translate
-        new_speed = 60 #random.randint(0, 100)
-        new_rpm =  4 #random.uniform(0, 6)
-        self.speed.update_value(new_speed)
-        self.rpm.update_value(new_rpm)
-        self.update_map()
+       
+        
         self.date.setText(datetime.now().strftime("%I: %M: %S  %p"))
-        arduino_update()
-        self.label_backLeftDoor.setText(f"{backLeftDoor}")
-        self.label_frontRightDoor.setText(f"{frontRightDoor}")
-        self.label_frontLeftDoor.setText(f"{frontLeftDoor}")
-        self.label_frontBonnet.setText(f"{frontBonnet}")
-        self.label_backBonnet.setText(f"{backBonnet}")
-        self.label_backRightDoor.setText(f"{backRightDoor}")
+        self.arduino_update()
+ 
+        map_ = folium.Map(location=self.loc_curr, zoom_start=13)
+        folium.Marker(self.loc_curr, popup="Car Location").add_to(map_)      
+        print(f"Updated Location - Latitude: {self.loc_curr[0]}, Longitude: {self.loc_curr[1]}")
+        self.label_backLeftDoor.setText(f"{self.backLeftDoor}")
+        self.label_frontRightDoor.setText(f"{self.frontRightDoor}")
+        self.label_frontLeftDoor.setText(f"{self.frontLeftDoor}")
+        self.label_frontBonnet.setText(f"{self.frontBonnet}")
+        self.label_backBonnet.setText(f"{self.backBonnet}")
+        self.label_backRightDoor.setText(f"{self.backRightDoor}")
         self.label_Fuel.setText(f"Fuel:")
         self.label_Doorlocked.setText(f"Door locked")
         self.label_Bottom_title.setText(f"Rolls Royce Phantom")
         self.label_weather_percentage.setText(f"<html><head/><body><p>{weather.temp_celsius:.0f}°C</p></body></html>")
         self.label_outdoor_temp.setText(f"Outdoor\nTemperature")
-        self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{temperature}°C</p></body></html>"))
+        self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{self.temperature}°C</p></body></html>"))
         
         self.label_backLeftDoor.adjustSize()
         self.label_frontRightDoor.adjustSize()
@@ -863,11 +832,43 @@ class Ui_MainWindow(object):
         # self.label_outdoor_temp.setText(f"Outdoor\nTemperature")
                 # self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{temperature}°C</p></body></html>"))
 
-    def update_map(self):
-        self.loc_curr = [18.49839 , 73.77439]
-        map_ = folium.Map(location=self.loc_curr, zoom_start=13)
-        folium.Marker(self.loc_curr, popup="Car Location").add_to(map_)      
-        print(f"Updated Location - Latitude: {self.loc_curr[0]}, Longitude: {self.loc_curr[1]}")
+    
+        
+    def arduino_update(self):
+        # Get live data from Arduino
+        #     car_status = get_live_data()
+
+        # Print the live data
+        #     print_data(car_status)
+
+        #     # Save the data to a file
+        #     save_data_to_file(car_status)
+
+        # Optionally, read data from file (if needed)
+        data_from_file = read_data_from_file()
+                
+        self.frontLeftDoor = data_from_file[1][0]
+        self.frontRightDoor = data_from_file[1][1]
+        self.backLeftDoor =   data_from_file[1][2]
+        self.backRightDoor =   data_from_file[1][3]
+        self.frontBonnet =   data_from_file[1][4]
+        self.backBonnet =   data_from_file[1][5]
+        self.temperature =   data_from_file[1][6]
+        self.gasDetected =   data_from_file[1][7]
+        self.motionDetected=     data_from_file[1][8]
+        # self.loc_curr = [data_from_file[1][9], data_from_file[1][10]]
+        self.loc_curr = [getlocation.current_location[0], getlocation.current_location[1]]
+        self.loc_curr = [data_from_file[1][9], data_from_file[1][10]] if self.loc_curr == [0,0] else self.loc_curr
+
+        self.speed_value = int(data_from_file[1][11])
+        self.rpm_value = int(data_from_file[1][12])
+        
+        
+        self.speed.update_value(self.speed_value)
+        self.rpm.update_value(self.rpm_value)
+        self.fuel_level = int(data_from_file[1][13])
+        self.Fuel_Progress_bar.setValue(self.fuel_level)
+        #     print_file_data(data_from_file)
         
         
 import resources
