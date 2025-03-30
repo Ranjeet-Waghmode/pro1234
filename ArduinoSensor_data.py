@@ -34,12 +34,12 @@ def get_live_data():
     data = request_data()
     if data:
         car_status = {
-            "frontLeftDoor": 'Locked' if int(data[0]) else 'Unlocked',
-            "frontRightDoor": 'Locked' if int(data[1]) else 'Unlocked',
-            "backLeftDoor": 'Locked' if int(data[2]) else 'Unlocked',
-            "backRightDoor": 'Locked' if int(data[3]) else 'Unlocked',
-            "frontBonnet": 'Locked' if int(data[4]) else 'Unlocked',
-            "backBonnet": 'Locked' if int(data[5]) else 'Unlocked',
+            "frontLeftDoor":   int(data[0]),
+            "frontRightDoor":  int(data[1]) ,
+            "backLeftDoor":    int(data[2]),
+            "backRightDoor":   int(data[3]),
+            "frontBonnet":     int(data[4]) ,
+            "backBonnet":      int(data[5]) ,
             "temperature": float(data[6]),
             "gasDetected": bool(int(data[7])),
             "motionDetected": bool(int(data[8]))

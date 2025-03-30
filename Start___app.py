@@ -28,7 +28,8 @@ from read_data_from_file import read_data_from_file, print_file_data
 # custom 
 import weather
 import getlocation
-  
+from theft_detection_ml import theft_detection_main
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -293,13 +294,13 @@ class Ui_MainWindow(object):
         self.frame_5.setObjectName("frame_5")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.frame_5)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.label_Doorlocked = QtWidgets.QLabel(self.frame_5)
-        self.label_Doorlocked.setStyleSheet("color:#fff;\n"
+        self.label_system_status_info = QtWidgets.QLabel(self.frame_5)
+        self.label_system_status_info.setStyleSheet("color:#fff;\n"
                 "font: 10pt \"MS UI Gothic\";\n"
                 "background:None;")
-        self.label_Doorlocked.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_Doorlocked.setObjectName("label_Doorlocked")
-        self.horizontalLayout_4.addWidget(self.label_Doorlocked)
+        self.label_system_status_info.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_system_status_info.setObjectName("label_system_status_info")
+        self.horizontalLayout_4.addWidget(self.label_system_status_info)
         self.label_Bottom_title = QtWidgets.QLabel(self.centralwidget)
         self.label_Bottom_title.setGeometry(QtCore.QRect(460, 579, 181, 31))
         self.label_Bottom_title.setStyleSheet("background:None;\n"
@@ -656,7 +657,8 @@ class Ui_MainWindow(object):
         self.label_backBonnet.setText(_translate("MainWindow", f"{self.backBonnet}"))
         self.label_backRightDoor.setText(_translate("MainWindow", f"{self.backRightDoor}"))
         self.label_Fuel.setText(_translate("MainWindow",f"Fuel:"))
-        self.label_Doorlocked.setText(_translate("MainWindow",f"All Door locked"))
+        self.system_status = "Sys: ✅Healthy"
+        self.label_system_status_info.setText(_translate("MainWindow",f"{self.system_status}"))
         self.label_Bottom_title.setText(_translate("MainWindow",f"Rolls Royce Phantom"))
         self.label_weather_percentage.setText(_translate("MainWindow", f"<html><head/><body><p>{weather.temp_celsius:.0f}°C</p></body></html>"))
         self.label_outdoor_temp.setText(_translate("MainWindow", "Outdoor\n"
@@ -799,8 +801,19 @@ class Ui_MainWindow(object):
         self.label_frontBonnet.setText(f"{self.frontBonnet}")
         self.label_backBonnet.setText(f"{self.backBonnet}")
         self.label_backRightDoor.setText(f"{self.backRightDoor}")
-        self.label_Fuel.setText(f"Fuel:")
-        self.label_Doorlocked.setText(f"Door locked")
+        self.label_Fuel.setText(f"Fuel:") 
+        
+        if self.gasDetected  :
+            self.system_status= f"{"ALERT GAS"}"
+        if self.motionDetected:
+            self.system_status= f"{"ALERT MOTION"}"
+        if theft_detection_main() == True:
+            self.system_status= "Anamoly"
+        if theft_detection_main() == False :
+            self.system_status= "Sys:✅Healthy"
+
+            
+        self.label_system_status_info.setText(f"{self.system_status}")
         self.label_Bottom_title.setText(f"Rolls Royce Phantom")
         self.label_weather_percentage.setText(f"<html><head/><body><p>{weather.temp_celsius:.0f}°C</p></body></html>")
         self.label_outdoor_temp.setText(f"Outdoor\nTemperature")
@@ -813,8 +826,9 @@ class Ui_MainWindow(object):
         self.label_backBonnet.adjustSize()
         self.label_backRightDoor.adjustSize()
         self.label_Fuel.adjustSize()
-        self.label_Doorlocked.adjustSize()
+        self.label_system_status_info.adjustSize()
         self.label_Bottom_title.adjustSize()
+        self.label_system_status_info.adjustSize()
         # self.label_weather_percentage.adjustSize()
         # self.label_outdoor_temp.adjustSize()
         # self.label_weather_percentage_3.adjustSize()
@@ -826,7 +840,7 @@ class Ui_MainWindow(object):
         # self.label_backBonnet.setText(f"{frontBonnet}")
         # self.label_backRightDoor.setText(f"{backBonnet}")
         # self.label_Fuel.setText(f"Fuel:")
-        # self.label_Doorlocked.setText(f"Door locked")
+        # self.label_system_status_info.setText(f"Door locked")
         # self.label_Bottom_title.setText(f"Rolls Royce Phantom")
         # self.label_weather_percentage.setText(f"<html><head/><body><p>{weather.temp_celsius:.0f}°C</p></body></html>")
         # self.label_outdoor_temp.setText(f"Outdoor\nTemperature")
@@ -847,26 +861,28 @@ class Ui_MainWindow(object):
         # Optionally, read data from file (if needed)
         data_from_file = read_data_from_file()
                 
-        self.frontLeftDoor = data_from_file[1][0]
-        self.frontRightDoor = data_from_file[1][1]
-        self.backLeftDoor =   data_from_file[1][2]
-        self.backRightDoor =   data_from_file[1][3]
-        self.frontBonnet =   data_from_file[1][4]
-        self.backBonnet =   data_from_file[1][5]
-        self.temperature =   data_from_file[1][6]
-        self.gasDetected =   data_from_file[1][7]
-        self.motionDetected=     data_from_file[1][8]
+        self.frontLeftDoor = "locked" if int(data_from_file[-1][0]) else "unlocked"
+        self.frontRightDoor = "locked" if int(data_from_file[-1][1]) else "unlocked"
+        self.backLeftDoor = "locked" if int(data_from_file[-1][2]) else "unlocked"
+        self.backRightDoor = "locked" if int(data_from_file[-1][3]) else "unlocked"
+        self.frontBonnet = "locked" if int(data_from_file[-1][4]) else "unlocked"
+        self.backBonnet = "locked" if int(data_from_file[-1][5]) else "unlocked"
+                
+    
+        self.temperature =   int(data_from_file[-1][6])
+        self.gasDetected =   int(data_from_file[-1][7])
+        self.motionDetected=     int(data_from_file[-1][8])
         # self.loc_curr = [data_from_file[1][9], data_from_file[1][10]]
         self.loc_curr = [getlocation.current_location[0], getlocation.current_location[1]]
-        self.loc_curr = [data_from_file[1][9], data_from_file[1][10]] if self.loc_curr == [0,0] else self.loc_curr
+        self.loc_curr = [data_from_file[-1][9], data_from_file[-1][10]] if self.loc_curr == [0,0] else self.loc_curr
 
-        self.speed_value = int(data_from_file[1][11])
-        self.rpm_value = int(data_from_file[1][12])
+        self.speed_value = int(data_from_file[-1][11])
+        self.rpm_value = int(data_from_file[-1][12])
         
         
         self.speed.update_value(self.speed_value)
         self.rpm.update_value(self.rpm_value)
-        self.fuel_level = int(data_from_file[1][13])
+        self.fuel_level = int(data_from_file[-1][13])
         self.Fuel_Progress_bar.setValue(self.fuel_level)
         #     print_file_data(data_from_file)
         
