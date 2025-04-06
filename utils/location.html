@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Geolocation Example</title>
+    <script src="https://code.qt.io/cgit/qt/qtwebchannel.git/plain/src/qwebchannel.js"></script>
+    <script type="text/javascript">
+        var bridge;
+
+        function sendLocationToPython(latitude, longitude) {
+            // Send the geolocation data to Python
+            bridge.update_location(latitude, longitude);
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                console.log("Latitude: " + latitude + " Longitude: " + longitude);
+                sendLocationToPython(latitude, longitude);
+            });
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+        }
+
+        // Make the bridge available to Python
+        window.onload = function() {
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                bridge = channel.objects.bridge;
+            });
+        };
+    </script>
+</head>
+<body>
+    <h1>Geolocation Example</h1>
+    <p>Getting geolocation...</p>
+</body>
+</html>

@@ -1,34 +1,4 @@
-import sys
-import io
-import folium # pip install folium
-from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
-from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
-from PyQt5 import QtCore, QtGui, QtWidgets
-from gauge import AnalogGaugeWidget
-from PyQt5.QtCore import *
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from qtwidgets import *
-from PyQt5.QtGui import QImage
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import QTimer
-
-# import Opencv module
-import cv2
-import random
-from datetime import datetime
-import requests
-# from ArduinoSensor_data import get_live_data, save_data_to_file, print_data
-from read_data_from_file import read_data_from_file, print_file_data
-
-# import ArduinoSensor_data
-                # ArduinoSensor_data.main()     # This will run the main function in ArduinoSensor_data.py
-                # ArduinoSensor_data.request_data() # This will run the request_data function in ArduinoSensor_data.py
-# custom 
-import weather
-import getlocation
-from theft_detection_ml import theft_detection_main
+from utils import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -230,13 +200,13 @@ class Ui_MainWindow(object):
         self.label_frontLeftDoor = QtWidgets.QLabel(self.car_state)
         self.label_frontLeftDoor.setGeometry(QtCore.QRect(40, 110, 41, 16))
         self.label_frontLeftDoor.setObjectName("label_frontLeftDoor")
-        self.label_frontBonnet = QtWidgets.QLabel(self.car_state)
-        self.label_frontBonnet.setGeometry(QtCore.QRect(120, 50, 41, 16))
-        self.label_frontBonnet.setObjectName("label_frontBonnet")
-        self.label_backBonnet = QtWidgets.QLabel(self.car_state)
-        self.label_backBonnet.setGeometry(QtCore.QRect(120, 190, 55, 16))
-        self.label_backBonnet.setStyleSheet("")
-        self.label_backBonnet.setObjectName("label_backBonnet")
+        self.label_Bonnet = QtWidgets.QLabel(self.car_state)
+        self.label_Bonnet.setGeometry(QtCore.QRect(120, 50, 41, 16))
+        self.label_Bonnet.setObjectName("label_Bonnet")
+        self.label_Trunk = QtWidgets.QLabel(self.car_state)
+        self.label_Trunk.setGeometry(QtCore.QRect(120, 190, 55, 16))
+        self.label_Trunk.setStyleSheet("")
+        self.label_Trunk.setObjectName("label_Trunk")
         self.label_backRightDoor = QtWidgets.QLabel(self.car_state)
         self.label_backRightDoor.setGeometry(QtCore.QRect(40, 150, 41, 16))
         self.label_backRightDoor.setObjectName("label_backRightDoor")
@@ -598,7 +568,6 @@ class Ui_MainWindow(object):
         self.webcam.setObjectName(u"webcam")
         self.webcam.setGeometry(QRect(500, 40, 321, 331))
 
-    
         MainWindow.setCentralWidget(self.centralwidget)
         self.show_Dash()
         self.progress()
@@ -618,7 +587,11 @@ class Ui_MainWindow(object):
 
 
     def viewCam(self):
-        ret, image = cap.read()
+                
+        ret, or_image = cap.read()
+        image = cv2.resize(or_image, ( 321, 331))
+
+        sleep_detection.main(ret, or_image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, channel = image.shape
         step = channel * width
@@ -653,8 +626,8 @@ class Ui_MainWindow(object):
         self.label_backLeftDoor.setText(_translate("MainWindow", f"{self.backLeftDoor}"))
         self.label_frontRightDoor.setText(_translate("MainWindow", f"{self.frontRightDoor}"))
         self.label_frontLeftDoor.setText(_translate("MainWindow", f"{self.frontLeftDoor}"))
-        self.label_frontBonnet.setText(_translate("MainWindow", f"{self.frontBonnet}"))
-        self.label_backBonnet.setText(_translate("MainWindow", f"{self.backBonnet}"))
+        self.label_Bonnet.setText(_translate("MainWindow", f"{self.Bonnet}"))
+        self.label_Trunk.setText(_translate("MainWindow", f"{self.Trunk}"))
         self.label_backRightDoor.setText(_translate("MainWindow", f"{self.backRightDoor}"))
         self.label_Fuel.setText(_translate("MainWindow",f"Fuel:"))
         self.system_status = "Sys: ✅Healthy"
@@ -798,8 +771,8 @@ class Ui_MainWindow(object):
         self.label_backLeftDoor.setText(f"{self.backLeftDoor}")
         self.label_frontRightDoor.setText(f"{self.frontRightDoor}")
         self.label_frontLeftDoor.setText(f"{self.frontLeftDoor}")
-        self.label_frontBonnet.setText(f"{self.frontBonnet}")
-        self.label_backBonnet.setText(f"{self.backBonnet}")
+        self.label_Bonnet.setText(f"{self.Bonnet}")
+        self.label_Trunk.setText(f"{self.Trunk}")
         self.label_backRightDoor.setText(f"{self.backRightDoor}")
         self.label_Fuel.setText(f"Fuel:") 
         
@@ -811,6 +784,15 @@ class Ui_MainWindow(object):
             self.system_status= "Anamoly"
         if theft_detection_main() == False :
             self.system_status= "Sys:✅Healthy"
+        # Rule-based Classification
+        if self.speed_value < -10 and self.rpm_value > 3000:
+                self.system_status= "Hard Braking"
+        elif abs(self.mpu_ax) > 2.5 or abs(self.mpu_ay) > 2.5:
+                self.system_status= "Sharp Turn"
+        elif self.rpm_value > 5000 and self.speed_value > 10:
+                self.system_status= "Aggressive Acceleration"
+        # else :
+        #         self.system_status="Normal Driving"
 
             
         self.label_system_status_info.setText(f"{self.system_status}")
@@ -822,12 +804,12 @@ class Ui_MainWindow(object):
         self.label_backLeftDoor.adjustSize()
         self.label_frontRightDoor.adjustSize()
         self.label_frontLeftDoor.adjustSize()
-        self.label_frontBonnet.adjustSize()
-        self.label_backBonnet.adjustSize()
+        self.label_Bonnet.adjustSize()
+        self.label_Trunk.adjustSize()
         self.label_backRightDoor.adjustSize()
         self.label_Fuel.adjustSize()
         self.label_system_status_info.adjustSize()
-        self.label_Bottom_title.adjustSize()
+        # self.label_Bottom_title.adjustSize()
         self.label_system_status_info.adjustSize()
         # self.label_weather_percentage.adjustSize()
         # self.label_outdoor_temp.adjustSize()
@@ -836,9 +818,9 @@ class Ui_MainWindow(object):
         # self.label_backLeftDoor.setText(f"{frontLeftDoor}")
         # self.label_frontRightDoor.setText(f"{frontRightDoor}")       
         # self.label_frontLeftDoor.setText(f"{backLeftDoor}")
-        # self.label_frontBonnet.setText(f"{backRightDoor}")
-        # self.label_backBonnet.setText(f"{frontBonnet}")
-        # self.label_backRightDoor.setText(f"{backBonnet}")
+        # self.label_Bonnet.setText(f"{backRightDoor}")
+        # self.label_Trunk.setText(f"{Bonnet}")
+        # self.label_backRightDoor.setText(f"{Trunk}")
         # self.label_Fuel.setText(f"Fuel:")
         # self.label_system_status_info.setText(f"Door locked")
         # self.label_Bottom_title.setText(f"Rolls Royce Phantom")
@@ -865,8 +847,8 @@ class Ui_MainWindow(object):
         self.frontRightDoor = "locked" if int(data_from_file[-1][1]) else "unlocked"
         self.backLeftDoor = "locked" if int(data_from_file[-1][2]) else "unlocked"
         self.backRightDoor = "locked" if int(data_from_file[-1][3]) else "unlocked"
-        self.frontBonnet = "locked" if int(data_from_file[-1][4]) else "unlocked"
-        self.backBonnet = "locked" if int(data_from_file[-1][5]) else "unlocked"
+        self.Bonnet = "locked" if int(data_from_file[-1][4]) else "unlocked"
+        self.Trunk = "locked" if int(data_from_file[-1][5]) else "unlocked"
                 
     
         self.temperature =   int(data_from_file[-1][6])
@@ -884,17 +866,38 @@ class Ui_MainWindow(object):
         self.rpm.update_value(self.rpm_value)
         self.fuel_level = int(data_from_file[-1][13])
         self.Fuel_Progress_bar.setValue(self.fuel_level)
+        self.voltage = float(data_from_file[-1][14])
+        self.current = float(data_from_file[-1][15])
+        self.mpu_ax = float(data_from_file[-1][16])
+        self.mpu_ay = float(data_from_file[-1][17])
+        self.mpu_az = float(data_from_file[-1][18])
+        self.mpu_gx = float(data_from_file[-1][19])
+        self.mpu_gy = float(data_from_file[-1][20])
+        self.mpu_gz = float(data_from_file[-1][21])
+        self.mpu_x = float(data_from_file[-1][22])
+        self.mpu_y = float(data_from_file[-1][23])
+        self.mpu_z = float(data_from_file[-1][24])
+        
         #     print_file_data(data_from_file)
+import utils.gui.resources
+ 
         
-        
-import resources
-
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
+    
+    
+     # Show splash
+    splash = LoadingSplash()
+    splash.show()
+
+    # Show main window after 3 seconds
     MainWindow = QtWidgets.QMainWindow()
+
+    QTimer.singleShot(1500, splash.close)
+    QTimer.singleShot(1, MainWindow.show)
+    
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    MainWindow.show()
+#     MainWindow.show()
     sys.exit(app.exec_())
 
