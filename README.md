@@ -27,10 +27,14 @@ Welcome to the Car Dashboard  prototype project! This simple yet intuitive dashb
    - 
 ## Screenshot
 
-<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142748.png">
-<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142657.png">
-<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142716.png">
-<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142738.png">
+<img src="docs & demonstration/images of proto/Screenshot 2025-03-21 142748.png">
+<img src="docs & demonstration/images of proto/Screenshot 2025-03-21 142657.png">
+<img src="docs & demonstration/images of proto/Screenshot 2025-03-21 142716.png">
+<img src="docs & demonstration\images of proto\Screenshot 2025-03-21 142738.png">
+
+<img src="docs & demonstration\images of proto\Screenshot 2025-03-20 225023.png">
+<img src="docs & demonstration\images of proto\Screenshot 2025-03-21 012520.png">
+<img src="docs & demonstration\images of proto\Screenshot (8).png">
 
 
 ## Todo
