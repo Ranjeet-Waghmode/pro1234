@@ -1,6 +1,6 @@
-# Car Dashboard (HMI) Prototype
+# Smart Car Dashboard
 
-Welcome to the Car Dashboard (HMI) prototype project! This simple yet intuitive dashboard is designed for a comprehensive in-car user experience. Check out the features and planned enhancements below.
+Welcome to the Car Dashboard  prototype project! This simple yet intuitive dashboard is designed for a comprehensive in-car user experience. Check out the features and planned enhancements below
 
 ## Features
 
@@ -27,10 +27,10 @@ Welcome to the Car Dashboard (HMI) prototype project! This simple yet intuitive 
    - 
 ## Screenshot
 
-<img src = "ss/1.PNG">
-<img src = "ss/2.PNG">
-<img src = "ss/3.PNG">
-<img src = "ss/4.PNG">
+<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142748.png">
+<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142657.png">
+<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142716.png">
+<img src = "D:\RANJEET\sap\car_dash\pro1234\docs & demonstration\images of proto\Screenshot 2025-03-21 142738.png">
 
 
 ## Todo
