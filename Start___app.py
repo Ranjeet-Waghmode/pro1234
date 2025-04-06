@@ -854,9 +854,7 @@ class Ui_MainWindow(object):
         self.temperature =   int(data_from_file[-1][6])
         self.gasDetected =   int(data_from_file[-1][7])
         self.motionDetected=     int(data_from_file[-1][8])
-        # self.loc_curr = [data_from_file[1][9], data_from_file[1][10]]
-        self.loc_curr = [getlocation.current_location[0], getlocation.current_location[1]]
-        self.loc_curr = [data_from_file[-1][9], data_from_file[-1][10]] if self.loc_curr == [0,0] else self.loc_curr
+        self.loc_curr = [data_from_file[-1][9], data_from_file[-1][10]] 
 
         self.speed_value = int(data_from_file[-1][11])
         self.rpm_value = int(data_from_file[-1][12])

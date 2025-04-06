@@ -21,11 +21,11 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer
 
 
-from .gui.gauge import AnalogGaugeWidget
-from .read_data_from_file import read_data_from_file, print_file_data
-from .theft_detection_ml import theft_detection_main
-from . import weather, getlocation
-from .shape_predictor import sleep_detection
-from .shape_predictor.sleep_detection import counter
-from .shape_predictor.sounds.play_sounds import welcome_sound
-from .loading_screen.loading import LoadingSplash
+from utils.gui.gauge import AnalogGaugeWidget
+from utils.read_data_from_file import read_data_from_file, print_file_data
+from utils.theft_detection_ml import theft_detection_main
+from utils import weather, getlocation
+from utils.shape_predictor import sleep_detection
+from utils.shape_predictor.sleep_detection import counter
+from utils.shape_predictor.sounds.play_sounds import welcome_sound
+from utils.loading_screen.loading import LoadingSplash
