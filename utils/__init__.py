@@ -18,9 +18,9 @@ from PyQt5.QtWidgets import *
 from qtwidgets import *
 from PyQt5.QtGui import QImage
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer,pyqtSignal
 
-
+from utils.gui import resources
 from utils.gui.gauge import AnalogGaugeWidget
 from utils.read_data_from_file import read_data_from_file, print_file_data
 from utils.theft_detection_ml import theft_detection_main

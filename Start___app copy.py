@@ -1,34 +1,6 @@
 from utils import *
 
 class Ui_MainWindow(object):
-    def __init__(self):
-        self.backLeftDoor = "unknown"
-        self.frontRightDoor = "unknown"
-        self.frontLeftDoor = "unknown"
-        self.Bonnet = "unknown"
-        self.Trunk = "unknown"
-        self.backRightDoor = "unknown"
-        self.temperature = 0
-        self.gasDetected = False
-        self.motionDetected = False
-        self.loc_curr = [0.0, 0.0]
-        self.speed_value = 0
-        self.rpm_value = 0
-        self.fuel_level = 0
-        self.voltage = 0.0
-        self.current = 0.0
-        self.mpu_ax = 0.0
-        self.mpu_ay = 0.0
-        self.mpu_az = 0.0
-        self.mpu_gx = 0.0
-        self.mpu_gy = 0.0
-        self.mpu_gz = 0.0
-        self.mpu_x = 0.0
-        self.mpu_y = 0.0
-        self.mpu_z = 0.0
-        
-        self.running_once = True
-
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setFixedSize(1117, 636)
@@ -37,13 +9,11 @@ class Ui_MainWindow(object):
         MainWindow.setStyleSheet("background-color: rgb(30, 31, 40);")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         
-        
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(0, 0, 1111, 651))
         self.label.setText("")
-        self.background_pixmap = QtGui.QPixmap(":/bg/Untitled (1).png")
-        self.label.setPixmap(self.background_pixmap)
+        self.label.setPixmap(QtGui.QPixmap(":/bg/Untitled (1).png"))
         self.label.setScaledContents(True)
         
         self.label.setObjectName("label")
@@ -558,24 +528,23 @@ class Ui_MainWindow(object):
         self.frame_map.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_map.setObjectName("frame_map")
         
-        self.cached_data = None  # Add this in the class constructor
-
         self.arduino_update()
-        if not hasattr(self, 'map_'):
-            from folium import Map
+        map_ = folium.Map(location=self.loc_curr, zoom_start=13)
+        folium.Marker(self.loc_curr, popup="Car Location").add_to(map_)
+        # m = folium.Map(
+        #     tiles='Stamen Terrain',
+        #     zoom_start=10,
+        #     location=coordinate,
+        #     attr='Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors'
+        # )
 
-            # Create the map
-            self.map_ = Map(location=self.loc_curr, zoom_start=13)
-            self.map_marker = folium.Marker(self.loc_curr, popup="Car Location")
-            self.map_marker.add_to(self.map_)
-        else:
-            self.map_marker.location = self.loc_curr
-
-        # Save map data to a BytesIO object
+        # save map data to data object
         data = io.BytesIO()
-        self.map_.save(data, close_file=False)
+        map_.save(data, close_file=False)
 
-        # Set the HTML content of the QWebEngineView
+        #webView = QWebEngineView(self.frame_map)
+        #webView.setHtml(data.getvalue().decode())
+
         self.map_plot = QWebEngineView(self.frame_map)
         self.map_plot.setHtml(data.getvalue().decode())
         self.map_plot.setObjectName(u"map_plot")
@@ -615,40 +584,14 @@ class Ui_MainWindow(object):
                 )
         self.label_km.setAlignment(Qt.AlignCenter)
 
-        # Create a separate timer for dashboard updates
-        self.dashboard_timer = QTimer()
-        self.dashboard_timer.timeout.connect(self.update_gauges)
-        self.dashboard_timer.start(1000)  # Update every second
 
-        # Create a timer for the camera
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.viewCam)
-        self.timer.start(100)  # Update every second
-
-        self.btn_dash.clicked.connect(self.show_Dash)
-        self.btn_ac.clicked.connect(self.show_AC)
-        self.btn_music.clicked.connect(self.show_Music)
-        self.btn_map.clicked.connect(self.show_Map)
 
     def viewCam(self):
-        if not hasattr(self, 'cap') or self.cap is None:
-            # print("Error: Camera is not initialized.")
-            return
+                
+        ret, or_image = cap.read()
+        image = cv2.resize(or_image, ( 321, 331))
 
-        ret, or_image = self.cap.read()
-        if not ret:
-            print("Error: Failed to capture frame.")
-            return  # Exit if no frame is captured
-
-        # Resize only if necessary
-        if self.webcam.width() != 321 or self.webcam.height() != 331:
-            image = cv2.resize(or_image, (321, 331))
-        else:
-            image = or_image
-        
-        sleep_detection.main(ret, image)
-
-        # Convert the image to RGB and display it
+        sleep_detection.main(ret, or_image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, channel = image.shape
         step = channel * width
@@ -656,28 +599,17 @@ class Ui_MainWindow(object):
         self.webcam.setPixmap(QPixmap.fromImage(qImg))
 
     def quit_cam(self):
-        if self.timer.isActive():
-            self.timer.stop()
-        if hasattr(self, 'cap') and self.cap is not None:
-            self.cap.release()
-            self.cap = None
+        self.timer.stop()
+        cap.release()
         
     def controlTimer(self):
         global cap
-        if not hasattr(self, 'cap') or self.cap is None:
-            self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Initialize camera
-            if not self.cap.isOpened():
-                print("Error: Unable to access the camera.")
-                return
-            else:
-                print("Camera initialized successfully.")
-
         if not self.timer.isActive():
-            self.timer.start(100)  # Update camera feed every 100ms
+            cap = cv2.VideoCapture(0)
+            self.timer.start(20)
         else:
             self.timer.stop()
-            self.cap.release()
-            self.cap = None  # Release camera when not in use
+            cap.release()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -689,6 +621,7 @@ class Ui_MainWindow(object):
         self.btn_music.setText(_translate("MainWindow", "MUSIC"))
         self.btn_map.setText(_translate("MainWindow", "MAP"))
         self.date.setText(datetime.now().strftime("%I: %M: %S  %p"))
+        self.arduino_update()
 
         self.label_backLeftDoor.setText(_translate("MainWindow", f"{self.backLeftDoor}"))
         self.label_frontRightDoor.setText(_translate("MainWindow", f"{self.frontRightDoor}"))
@@ -718,6 +651,149 @@ class Ui_MainWindow(object):
         self.btn_map_start.setText(_translate("MainWindow", "Start"))
         self.btn_map_stop.setText(_translate("MainWindow", "Stop"))
         
+        #btn function
+        self.btn_dash.clicked.connect(self.show_Dash)
+        self.btn_ac.clicked.connect(self.show_AC)
+        self.btn_music.clicked.connect(self.show_Music)
+        self.btn_map.clicked.connect(self.show_Map)
+
+
+
+    def show_Dash(self):
+        self.quit_cam
+        self.progress()
+
+        self.frame_dashboard.setVisible(True)
+        self.frame_AC.setVisible(False)
+        self.frame_map.setVisible(False)
+        self.frame_music.setVisible(False)
+        self.timer.stop
+
+
+
+
+    def show_AC(self):
+        self.progress()
+
+        self.quit_cam
+        self.frame_dashboard.setVisible(False)
+        self.frame_AC.setVisible(True)
+        self.frame_map.setVisible(False)
+        self.frame_music.setVisible(False)
+
+    def show_Music(self):
+        self.progress()
+        self.quit_cam
+        self.frame_dashboard.setVisible(False)
+        self.frame_AC.setVisible(False)
+        self.frame_map.setVisible(False)
+        self.frame_music.setVisible(True)
+        self.browser = QWebEngineView(self.frame_music)
+        self.browser.setUrl(QUrl("https://music.youtube.com/"))  # Spotify Web Player URL
+        
+        # Add the browser to the layout (inside the frame) # Dont know what happened here but working fine.
+        self.music_layout = QVBoxLayout()
+        self.music_layout.addWidget(self.browser)
+        self.frame_music.setLayout(self.music_layout)
+        MainWindow.setCentralWidget(self.centralwidget) 
+
+    def show_Map(self):
+        self.progress()
+        self.frame_dashboard.setVisible(False)
+        self.frame_AC.setVisible(False)
+        self.frame_map.setVisible(True)
+        self.frame_music.setVisible(False)
+        self.controlTimer()
+
+    def progress(self):
+        self.speed.set_MaxValue(100)
+        self.speed.set_DisplayValueColor(200,200,200)
+        self.speed.set_CenterPointColor(0,0,0)
+        self.speed.set_NeedleColor(255,0,0)
+        self.speed.set_NeedleColorDrag(255,255,255)
+        self.speed.set_ScaleValueColor(255,200,255)
+        self.speed.set_enable_big_scaled_grid(True)
+        self.speed.set_enable_barGraph(False)
+        self.speed.set_enable_filled_Polygon(False)
+        # self.speed.update_value(5) # set the value of speed to 5
+
+
+        self.rpm.set_scala_main_count(6)
+        self.rpm.set_MaxValue(6)
+        self.rpm.set_MinValue(0)
+        # self.rpm.update_value(0) # set the value of RPM to 5
+        self.rpm.set_DisplayValueColor(200,200,200)
+        self.rpm.set_enable_big_scaled_grid(True)
+        self.rpm.set_ScaleValueColor(255,255,255)
+        self.rpm.set_NeedleColor(255,0,0)
+        self.rpm.set_NeedleColorDrag(255,255,255)
+        self.rpm.set_CenterPointColor(0,0,0)
+        
+        # Create a timer to update the speed and RPM values dynamically
+        self.timer.timeout.connect(self.update_gauges)
+
+        
+#     def progress(self):
+#         self.speed.set_MaxValue(100)
+#         self.speed.set_DisplayValueColor(200, 200, 200)
+#         self.speed.set_CenterPointColor(255, 255, 255)
+#         self.speed.set_NeedleColor(255, 255, 200)
+#         self.speed.set_NeedleColorDrag(255, 255, 255)
+#         self.speed.set_ScaleValueColor(255, 200, 255)
+#         self.speed.set_enable_big_scaled_grid(True)
+#         self.speed.set_enable_barGraph(False)
+#         self.speed.set_enable_filled_Polygon(False)
+
+#         self.rpm.set_scala_main_count(6)
+#         self.rpm.set_MaxValue(6)
+#         self.rpm.set_MinValue(0)
+#         self.rpm.set_DisplayValueColor(200, 200, 200)
+#         self.rpm.set_enable_big_scaled_grid(True)
+#         self.rpm.set_ScaleValueColor(255, 255, 255)
+#         self.rpm.set_NeedleColorDrag(255, 255, 255)
+#         self.rpm.set_CenterPointColor(255, 255, 255)
+
+#         # Create a timer to update the speed and RPM values dynamically
+#         self.timer = QTimer()
+#         self.timer.timeout.connect(self.update_gauges)
+#         self.timer.start(1000)  # Update every second
+
+    def update_gauges(self):
+        _translate = QtCore.QCoreApplication.translate
+       
+        
+        self.date.setText(datetime.now().strftime("%I: %M: %S  %p"))
+        self.arduino_update()
+ 
+        map_ = folium.Map(location=self.loc_curr, zoom_start=13)
+        folium.Marker(self.loc_curr, popup="Car Location").add_to(map_)      
+        print(f"Updated Location - Latitude: {self.loc_curr[0]}, Longitude: {self.loc_curr[1]}")
+        self.label_backLeftDoor.setText(f"{self.backLeftDoor}")
+        self.label_frontRightDoor.setText(f"{self.frontRightDoor}")
+        self.label_frontLeftDoor.setText(f"{self.frontLeftDoor}")
+        self.label_Bonnet.setText(f"{self.Bonnet}")
+        self.label_Trunk.setText(f"{self.Trunk}")
+        self.label_backRightDoor.setText(f"{self.backRightDoor}")
+        self.label_Fuel.setText(f"Fuel:") 
+        
+        if self.gasDetected  :
+            self.system_status= f"{"ALERT GAS"}"
+        if self.motionDetected:
+            self.system_status= f"{"ALERT MOTION"}"
+        if theft_detection_main() == True:
+            self.system_status= "Anamoly"
+        if theft_detection_main() == False :
+            self.system_status= "Sys:✅Healthy"
+        # Rule-based Classification
+        if self.speed_value < -10 and self.rpm_value > 3000:
+                self.system_status= "Hard Braking"
+        elif abs(self.mpu_ax) > 2.5 or abs(self.mpu_ay) > 2.5:
+                self.system_status= "Sharp Turn"
+        elif self.rpm_value > 5000 and self.speed_value > 10:
+                self.system_status= "Aggressive Acceleration"
+        # else :
+        #         self.system_status="Normal Driving"
+
             
         self.label_system_status_info.setText(f"{self.system_status}")
         self.label_Bottom_title.setText(f"Rolls Royce Phantom")
@@ -751,268 +827,57 @@ class Ui_MainWindow(object):
         # self.label_weather_percentage.setText(f"<html><head/><body><p>{weather.temp_celsius:.0f}°C</p></body></html>")
         # self.label_outdoor_temp.setText(f"Outdoor\nTemperature")
                 # self.label_weather_percentage_3.setText(_translate("MainWindow", f"<html><head/><body><p>{temperature}°C</p></body></html>"))
-  
 
-        # self.arduino_update()
-
-        #btn function
-        self.btn_dash.clicked.connect(self.show_Dash)
-        self.btn_ac.clicked.connect(self.show_AC)
-        self.btn_music.clicked.connect(self.show_Music)
-        self.btn_map.clicked.connect(self.show_Map)
-
-
-
-    def show_Dash(self):
-        self.quit_cam()  # Stop camera feed when switching to the dashboard
-        self.progress()
-
-        self.frame_dashboard.setVisible(True)
-        self.frame_AC.setVisible(False)
-        self.frame_map.setVisible(False)
-        self.frame_music.setVisible(False)
-        self.timer.stop
-
-
-
-
-    def show_AC(self):
-        self.progress()
-
-        self.quit_cam
-        self.frame_dashboard.setVisible(False)
-        self.frame_AC.setVisible(True)
-        self.frame_map.setVisible(False)
-        self.frame_music.setVisible(False)
-
-    def show_Music(self):
-        self.progress()
-        self.quit_cam
-        self.frame_dashboard.setVisible(False)
-        self.frame_AC.setVisible(False)
-        self.frame_map.setVisible(False)
-        self.frame_music.setVisible(True)
-        if not hasattr(self, 'browser'):
-            self.browser = QWebEngineView(self.frame_music)
-            self.browser.setUrl(QUrl("https://music.youtube.com"))
-            self.music_layout = QVBoxLayout()
-            self.music_layout.addWidget(self.browser)
-            self.frame_music.setLayout(self.music_layout)
-
-    def show_Map(self):
-        self.progress()
-        self.frame_dashboard.setVisible(False)
-        self.frame_AC.setVisible(False)
-        self.frame_map.setVisible(True)
-        self.frame_music.setVisible(False)
-        self.controlTimer()  # Start camera feed only when the map is visible
-
-    def progress(self):
-        self.speed.set_MaxValue(100)
-        self.speed.set_DisplayValueColor(200,200,200)
-        self.speed.set_CenterPointColor(0,0,0)
-        self.speed.set_NeedleColor(255,0,0)
-        self.speed.set_NeedleColorDrag(255,255,255)
-        self.speed.set_ScaleValueColor(255,200,255)
-        self.speed.set_enable_big_scaled_grid(True)
-        self.speed.set_enable_barGraph(False)
-        self.speed.set_enable_filled_Polygon(False)
-        # self.speed.update_value(0) # set the value of speed to 5
-
-
-        self.rpm.set_scala_main_count(6)
-        self.rpm.set_MaxValue(6)
-        self.rpm.set_MinValue(0)
-        # self.rpm.update_value(0) # set the value of RPM to 5
-        self.rpm.set_DisplayValueColor(200,200,200)
-        self.rpm.set_enable_big_scaled_grid(True)
-        self.rpm.set_ScaleValueColor(255,255,255)
-        self.rpm.set_NeedleColor(255,0,0)
-        self.rpm.set_NeedleColorDrag(255,255,255)
-        self.rpm.set_CenterPointColor(0,0,0)
+    
         
-        # Create a timer to update the speed and RPM values dynamically
-        # self.timer.timeout.connect(self.update_gauges)
-
-        
-#     def progress(self):
-#         self.speed.set_MaxValue(100)
-#         self.speed.set_DisplayValueColor(200, 200, 200)
-#         self.speed.set_CenterPointColor(255, 255, 255)
-#         self.speed.set_NeedleColor(255, 255, 200)
-#         self.speed.set_NeedleColorDrag(255, 255, 255)
-#         self.speed.set_ScaleValueColor(255, 200, 255)
-#         self.speed.set_enable_big_scaled_grid(True)
-#         self.speed.set_enable_barGraph(False)
-#         self.speed.set_enable_filled_Polygon(False)
-
-#         self.rpm.set_scala_main_count(6)
-#         self.rpm.set_MaxValue(6)
-#         self.rpm.set_MinValue(0)
-#         self.rpm.set_DisplayValueColor(200, 200, 200)
-#         self.rpm.set_enable_big_scaled_grid(True)
-#         self.rpm.set_ScaleValueColor(255, 255, 255)
-#         self.rpm.set_NeedleColorDrag(255, 255, 255)
-#         self.rpm.set_CenterPointColor(255, 255, 255)
-
-#         # Create a timer to update the speed and RPM values dynamically
-#         self.timer = QTimer()
-#         self.timer.timeout.connect(self.update_gauges)
-#         self.timer.start(1000)  # Update every second
-
-    def update_gauges(self):
-        print("Updating gauges...")  # Debugging
-        self.arduino_update()
-        self.date.setText(datetime.now().strftime("%I: %M: %S  %p"))
-
-        # Use a callback to handle the HTML content
-        def handle_html(html):
-            print("Map HTML loaded:", html)
-            # Update map marker dynamically using JavaScript
-            if hasattr(self, 'map_marker'):
-                lat, lon = self.loc_curr
-                js_code = f"""
-                if (typeof marker !== 'undefined') {{
-                    map.removeLayer(marker);
-                }}
-                var marker = L.marker([{lat}, {lon}]).addTo(map);
-                map.setView([{lat}, {lon}], 13);
-                """
-                self.map_plot.page().runJavaScript(js_code)
-
-        self.map_plot.page().toHtml(handle_html)
-
     def arduino_update(self):
+        # Get live data from Arduino
+        #     car_status = get_live_data()
+
+        # Print the live data
+        #     print_data(car_status)
+
+        #     # Save the data to a file
+        #     save_data_to_file(car_status)
+
+        # Optionally, read data from file (if needed)
+        data_from_file = read_data_from_file()
+                
+        self.frontLeftDoor = "locked" if int(data_from_file[-1][0]) else "unlocked"
+        self.frontRightDoor = "locked" if int(data_from_file[-1][1]) else "unlocked"
+        self.backLeftDoor = "locked" if int(data_from_file[-1][2]) else "unlocked"
+        self.backRightDoor = "locked" if int(data_from_file[-1][3]) else "unlocked"
+        self.Bonnet = "locked" if int(data_from_file[-1][4]) else "unlocked"
+        self.Trunk = "locked" if int(data_from_file[-1][5]) else "unlocked"
+                
+    
+        self.temperature =   int(data_from_file[-1][6])
+        self.gasDetected =   int(data_from_file[-1][7])
+        self.motionDetected=     int(data_from_file[-1][8])
+        self.loc_curr = [data_from_file[-1][9], data_from_file[-1][10]] 
+
+        self.speed_value = int(data_from_file[-1][11])
+        self.rpm_value = int(data_from_file[-1][12])
         
         
-        if self.gasDetected  :
-            self.system_status= f"{"ALERT GAS"}"
-        if self.motionDetected:
-            self.system_status= f"{"ALERT MOTION"}"
-        if theft_detection_main() == True:
-            self.system_status= "Anamoly"
-        if theft_detection_main() == False :
-            self.system_status= "Sys:✅Healthy"
-        # Rule-based Classification
-        if self.speed_value < -10 and self.rpm_value > 3000:
-                self.system_status= "Hard Braking"
-        elif abs(self.mpu_ax) > 2.5 or abs(self.mpu_ay) > 2.5:
-                self.system_status= "Sharp Turn"
-        elif self.rpm_value > 5000 and self.speed_value > 10:
-                self.system_status= "Aggressive Acceleration"
-        # else :
-        #         self.system_status="Normal Driving"
-        self.label_system_status_info.setText(f"{self.system_status}")
+        self.speed.update_value(self.speed_value)
+        self.rpm.update_value(self.rpm_value)
+        self.fuel_level = int(data_from_file[-1][13])
+        self.Fuel_Progress_bar.setValue(self.fuel_level)
+        self.voltage = float(data_from_file[-1][14])
+        self.current = float(data_from_file[-1][15])
+        self.mpu_ax = float(data_from_file[-1][16])
+        self.mpu_ay = float(data_from_file[-1][17])
+        self.mpu_az = float(data_from_file[-1][18])
+        self.mpu_gx = float(data_from_file[-1][19])
+        self.mpu_gy = float(data_from_file[-1][20])
+        self.mpu_gz = float(data_from_file[-1][21])
+        self.mpu_x = float(data_from_file[-1][22])
+        self.mpu_y = float(data_from_file[-1][23])
+        self.mpu_z = float(data_from_file[-1][24])
         
-        file_path = r"data/car_Arduino_data.csv"
-        try:
-            last_modified = os.path.getmtime(file_path) 
-        except FileNotFoundError:
-            print("Error: Arduino CSV file not found.")
-            return
-
-        if not hasattr(self, 'last_file_modified') or self.last_file_modified != last_modified:
-      
-            self.last_file_modified = last_modified
-            data_from_file = read_data_from_file()
-            print("Fetched Data:", data_from_file)  # Debugging
-
-            try:
-                self.frontLeftDoor = "locked" if int(data_from_file[-1][0]) else "unlocked"
-                self.frontRightDoor = "locked" if int(data_from_file[-1][1]) else "unlocked"
-                self.backLeftDoor = "locked" if int(data_from_file[-1][2]) else "unlocked"
-                self.backRightDoor = "locked" if int(data_from_file[-1][3]) else "unlocked"
-                self.Bonnet = "locked" if int(data_from_file[-1][4]) else "unlocked"
-                self.Trunk = "locked" if int(data_from_file[-1][5]) else "unlocked"
-                
-                self.temperature =   int(data_from_file[-1][6])
-                self.gasDetected =   int(data_from_file[-1][7])
-                self.motionDetected=     int(data_from_file[-1][8])
-                self.loc_curr = [data_from_file[-1][9], data_from_file[-1][10]] 
-
-                self.speed_value = int(data_from_file[-1][11])
-                self.rpm_value = int(data_from_file[-1][12])
-                
-                
-        
-                self.fuel_level = int(data_from_file[-1][13])
-                self.voltage = float(data_from_file[-1][14])
-                self.current = float(data_from_file[-1][15])
-                self.mpu_ax = float(data_from_file[-1][16])
-                self.mpu_ay = float(data_from_file[-1][17])
-                self.mpu_az = float(data_from_file[-1][18])
-                self.mpu_gx = float(data_from_file[-1][19])
-                self.mpu_gy = float(data_from_file[-1][20])
-                self.mpu_gz = float(data_from_file[-1][21])
-                self.mpu_x = float(data_from_file[-1][22])
-                self.mpu_y = float(data_from_file[-1][23])
-                self.mpu_z = float(data_from_file[-1][24])
-                        
-                self.label_frontLeftDoor.setText(f"{self.frontLeftDoor}")
-                self.label_frontRightDoor.setText(f"{self.frontRightDoor}")
-                self.label_backLeftDoor.setText(f"{self.backLeftDoor}")
-                self.label_backRightDoor.setText(f"{self.backRightDoor}")
-                self.label_Bonnet.setText(f"{self.Bonnet}")
-                self.label_Trunk.setText(f"{self.Trunk}")
-                # self.label_Fuel.setText(f"Fuel: {self.fuel_level}%")
-                
-                self.label_weather_percentage_3.setText((f"<html><head/><body><p>{self.temperature}°C</p></body></html>"))
-                
-
-                
-             
-            except (IndexError, ValueError) as e:
-                print("Error parsing data:", e)
-                return
-
-            # Update gauges
-            self.speed.update_value(self.speed_value)
-            self.rpm.update_value(self.rpm_value)
-            if self.Fuel_Progress_bar.value() != self.fuel_level:
-                self.Fuel_Progress_bar.setValue(self.fuel_level)
-
-    def update_map(self):
-        if hasattr(self, 'map_plot') and self.map_plot:
-            lat, lon = self.loc_curr
-            js_code = f"""
-            if (typeof marker !== 'undefined') {{
-                map.removeLayer(marker);
-            }}
-            var marker = L.marker([{lat}, {lon}]).addTo(map);
-            map.setView([{lat}, {lon}], 13);
-            """
-            self.map_plot.page().runJavaScript(js_code)
-
-class DataFetchThread(QThread):
-    data_fetched = pyqtSignal(dict)
-
-    def run(self):
-        data = read_data_from_file()  # Fetch data from Arduino
-        self.data_fetched.emit(data)
-
-class CameraThread(QThread):
-    frame_ready = pyqtSignal(QImage)
-
-    def run(self):
-        global cap
-        while cap.isOpened():
-            ret, or_image = cap.read()
-            if not ret:
-                print("Error: Failed to capture frame in thread.")
-                break
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            height, width, channel = image.shape
-            step = channel * width
-            qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
-            self.frame_ready.emit(qImg)
-
-def startCamera(self):
-    self.camera_thread = CameraThread()
-    self.camera_thread.frame_ready.connect(self.updateWebcam)
-    self.camera_thread.start()
-
-def updateWebcam(self, qImg):
-    self.webcam.setPixmap(QPixmap.fromImage(qImg))
+        #     print_file_data(data_from_file)
+import utils.gui.resources
  
         
 if __name__ == "__main__":
@@ -1033,5 +898,4 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
 #     MainWindow.show()
     sys.exit(app.exec_())
-
 

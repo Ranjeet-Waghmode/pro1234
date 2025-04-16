@@ -90,8 +90,7 @@ def run_theft_detection_system(file_path):
     # If anomalies are detected, trigger the alert system
     if not anomalies.empty:
         print("Anomalies detected! Triggering alerts.")
-        # send_alert()
-        # Optionally, save the anomalies to a separate CSV for further review
+
         anomalies.to_csv(os.path.join(os.path.dirname(os.path.abspath("Start___app.py")),"data", 'detected_anomalies.csv') , index=False)
         theft_detection_status = True
 
